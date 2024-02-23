@@ -64,7 +64,39 @@ class ViewController: UIViewController {
     }
   }
   
-  override func didReceiveMemoryWarning() {
+    @IBAction func showNotificationWithUrl(_ sender: Any) {
+        let content = UNMutableNotificationContent()
+        content.title = "title"
+        content.body = "body"
+        content.userInfo = [
+            "notificationId" : "test",
+            "isFlareLane" : true,
+            "aps" : [
+                "alert" : [
+                    "title" : "title",
+                    "body" : "body"
+                ]
+            ],
+            "url" : "https://www.google.com"
+        ]
+        
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.1, repeats: false)
+        let request = UNNotificationRequest(
+            identifier: "uniqueIdentifier",
+            content: content,
+            trigger: trigger
+        )
+        
+        UNUserNotificationCenter.current().add(request) { (error) in
+            if let error = error {
+                print("Error: \(error.localizedDescription)")
+            } else {
+                print("Notification scheduled successfully")
+            }
+        }
+    }
+    
+    override func didReceiveMemoryWarning() {
     super.didReceiveMemoryWarning()
     // Dispose of any resources that can be recreated.
   }
