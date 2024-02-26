@@ -14,7 +14,7 @@ import UserNotifications
   // MARK: - Delegate Methods
   
   /// To handle notification clicked
-  @objc public func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+    @objc public func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
     Logger.verbose("INVOKED")
     
     if let notification = FlareLaneNotification.getFlareLaneNotificationFromUNNotificationContent(response.notification.request.content) {
@@ -27,6 +27,19 @@ import UserNotifications
       } else {
         Logger.verbose("Clicked user notification.")
         EventService.createClicked(notification: notification)
+          
+        if let notification = FlareLaneNotification.getFlareLaneNotificationFromUNNotificationContent(response.notification.request.content) {
+            if let urlString = notification.url, let url = URL(string: urlString) {
+                if let root = UIApplication.shared.keyWindow?.rootViewController {
+                    let webViewController = FlareLaneWebViewController(url: url)
+                    if let presentVC = root.presentedViewController {
+                        presentVC.present(webViewController, animated: true)
+                    } else {
+                        root.present(webViewController, animated: true)
+                    }
+                }
+            }
+        }
       }
     }
     completionHandler()
