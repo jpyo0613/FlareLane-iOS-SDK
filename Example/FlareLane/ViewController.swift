@@ -5,6 +5,8 @@
 
 import UIKit
 import FlareLane
+import Intents
+import UIKit
 
 class ViewController: UIViewController {
     var isSetUserId = false
@@ -82,21 +84,98 @@ class ViewController: UIViewController {
             ],
             "url" : url
         ]
+    
         
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.1, repeats: false)
+        
+        
+        
+        
         let request = UNNotificationRequest(
             identifier: "uniqueIdentifier",
             content: content,
             trigger: trigger
         )
+    
         
-        UNUserNotificationCenter.current().add(request) { (error) in
+        let avatar = INImage(imageData: UIImagePNGRepresentation(UIImage(named: "person.png")!)!)
+        let senderPerson = INPerson(
+            personHandle: INPersonHandle(value: "unique-sender-id-2", type: .unknown),
+            nameComponents: nil,
+            displayName: "Sender name",
+            image: avatar,
+            contactIdentifier: nil,
+            customIdentifier: nil,
+            isMe: false,
+            suggestionType: .none
+        )
+
+        let mePerson = INPerson(
+            personHandle: INPersonHandle(value: "unique-me-id-2", type: .unknown),
+            nameComponents: nil,
+            displayName: nil,
+            image: nil,
+            contactIdentifier: nil,
+            customIdentifier: nil,
+            isMe: true,
+            suggestionType: .none
+        )
+        
+        // Intent
+        let intent = INSendMessageIntent(recipients: [mePerson],
+                                         outgoingMessageType: .outgoingMessageText,
+                                         content: "Message content",
+                                         speakableGroupName: nil,
+                                         conversationIdentifier: "unique-conversation-id-1",
+                                         serviceName: nil,
+                                         sender: senderPerson,
+                                         attachments: nil)
+
+        intent.setImage(avatar, forParameterNamed: \.sender)
+        // intent.setImage(avatar, forParameterNamed: \.speakableGroupName) // 그룹
+
+        // interaction
+        let interaction = INInteraction(intent: intent, response: nil)
+        interaction.direction = .incoming
+        
+        //        // 알림을 주기 전에 `donate`
+        interaction.donate { error in
             if let error = error {
-                print("Error: \(error.localizedDescription)")
-            } else {
-                print("Notification scheduled successfully")
+                print(error)
+                return
+            }
+            
+            do {
+                // 이전 notification에 intent를 더해주고, 노티 띄우기
+                let updatedContent = try request.content.updating(from: intent)
+//                contentHandler(updatedContent)
+                
+                
+                let r = UNNotificationRequest(
+                    identifier: "uniqueIdentifier",
+                    content: updatedContent,
+                    trigger: trigger
+                )
+                UNUserNotificationCenter.current().add(r) { (error) in
+                    if let error = error {
+                        print("Error: \(error.localizedDescription)")
+                    } else {
+                        print("Notification scheduled successfully")
+                    }
+                }
+            } catch {
+                print(error)
             }
         }
+        
+//        UNUserNotificationCenter.current().add(request) { (error) in
+//            if let error = error {
+//                print("Error: \(error.localizedDescription)")
+//            } else {
+//                print("Notification scheduled successfully")
+//            }
+//        }
+    
     }
     
     override func didReceiveMemoryWarning() {
